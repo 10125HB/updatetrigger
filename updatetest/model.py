@@ -50,3 +50,24 @@ class Model:
     def b(self, value):
         self._b = value
         logger.info("Set b to %s", value)
+
+    def single_update(self):
+        """Update the model once."""
+        class UpdateContext:
+            """Context manager to prevent the update method from being called."""
+
+            def __init__(self, model):
+                self.model = model
+                self.previous_prevent_update = model.prevent_update
+
+            def __enter__(self):
+                self.model.prevent_update = True
+
+            def __exit__(self, exc_type, exc_value, traceback):
+                self.model.prevent_update = self.previous_prevent_update
+                self.model.update()
+                if exc_type:
+                    logger.error("An error occurred during the update: %s", exc_value)
+                return False
+
+        return UpdateContext(self)
